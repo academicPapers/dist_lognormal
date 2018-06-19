@@ -1,0 +1,39 @@
+---
+title: "Diversos gráficos da distribuição lognormal no R"
+author: "Luiz Fernando Palin Droubi"
+date: "23/02/2018"
+output:
+  pdf_document: default
+  html_document:
+    keep_md: yes
+    self_contained: no
+---
+
+Aprenda como plotar a distribuição lognormal de diversas formas, como esta:
+
+```{r setup, echo = FALSE}
+knitr::opts_chunk$set(fig.path = "images/", dev = "png", fig.align = "center",
+  tidy=FALSE,     # display code as typed
+  size="small")   # slightly smaller font for code
+library(ggplot2)
+library(reshape2)
+library(ggthemes)
+library(latex2exp)
+theme_set(theme_few())
+```
+
+```{r lognormal, echo = FALSE}
+x <- seq(0, 3, 0.05)
+sigma <- c(5, 1, .5, .25)
+y <- lapply(sigma, dlnorm, x = x, meanlog = log(1))
+data <- data.frame(x, y[[1]], y[[2]], y[[3]], y[[4]])
+colnames(data) <- c("x", "y1", "y2", "y3", "y4")
+data <- melt(data, id = 1)
+ggplot(data, aes(x = x, y = value, 
+                 color = factor(variable, labels = c("5", "1", ".5", ".25")))) +
+  geom_line() +
+  scale_y_continuous(limits = c(0, max(data$value)), expand = c(0, 0)) + 
+  scale_x_continuous(limits = c(0, max(data$x)), expand = c(0, 0)) +
+  labs(color = TeX("$\\sigma$"))
+```
+

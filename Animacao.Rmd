@@ -1,0 +1,29 @@
+---
+title: "lognormal"
+author: "Luiz Droubi"
+date: "22/02/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(ggthemes)
+theme_set(theme_few())
+```
+
+# Diversos gráficos da distribuição lognormal no R
+
+Aprenda como plotar a distribuição lognormal de diversas formas, como esta:
+
+```{r, fig.show='animate', results='hide', cache = TRUE}
+x <- seq(0, 3, 0.05)
+desvio <- seq(5, 0.25, by = -0.5)
+p <- list()
+for (i in seq_along(desvio)) {
+  y <- dlnorm(x, meanlog = log(1), sdlog = desvio[i])
+  data <- data.frame(x = x, y = y)
+  p[[i]] <- ggplot(data, aes(x = x, y = y)) + geom_line()
+}
+p
+```

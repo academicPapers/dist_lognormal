@@ -1,0 +1,311 @@
+---
+title: "Distribuição Log-Normal"
+subtitle: "Propriedades e aplicações"
+author:
+- Luiz Fernando Palin Droubi^[SPU/SC, luiz.droubi@planejamento.gov.br]
+- Norberto Hochheim^[UFSC, hochheim@gmail.com]
+- Willian Zonato^[SPU/SC, willian.zonato@planejamento.gov.br]
+date: "`r format(Sys.Date(), '%d/%m/%Y')`"
+output:
+  pdf_document:
+    keep_tex: yes
+    number_sections: yes
+    includes:
+      in_header: preamble.tex
+  html_document:
+    fig_caption: yes
+    keep_md: yes
+classoption: a4paper
+documentclass: article
+link-citations: yes
+csl: ABNT_UFPR_2011-Mendeley.csl
+bibliography: bibliography.bib
+header-includes:
+  - \usepackage{amsmath,amssymb}
+---
+
+```{r, setup, include=FALSE}
+library(appraiseR)
+library(fitdistrplus)
+library(lindia)
+library(mosaic)
+library(latticeExtra)
+library(stargazer)
+library(sjPlot)
+library(knitr)
+library(kableExtra)
+library(ggplot2)
+library(latex2exp)
+library(reshape2)
+library(ggthemes)
+theme_set(theme_few())
+trellis.par.set(theme=theEconomist.theme()) # change default color scheme for lattice
+knitr::opts_chunk$set(fig.path = "images/", dev = "png", dpi = 600, 
+                      fig.pos = "H", fig.align = "center", out.width="70%", 
+                      tidy=FALSE, size="small")
+type <- knitr::opts_knit$get("rmarkdown.pandoc.to")
+options(digits = 10)
+```
+
+# INTRODUÇÃO
+
+A transformação de variáveis é um procedimento comum na Engenharia de Avaliações. No entanto, a transformação dos dados por vezes é realizada sem uma análise profunda do comportamento das variáveis. A *Food and Drug Administration* (FDA), órgão federal dos EUA que atua no controle da comercialização de alimentos e medicamentos no país, recomenda:
+
+> A transformação desnecessária de dados deve ser evitada. Caso tenha sido realizada transformação de dados, uma justificativa para a escolha da transformação junto com a interpretação das estimativas dos efeitos do tratamento com base nos dados transformados deve ser fornecida.[@fda apud @keene]
+
+No entanto, a transformação logarítmica é especial, por uma série de aspectos, como pode ser visto em @keene.
+
+A distribuição lognormal apresenta diversas aplicações práticas. É comum, na área de avaliação de imóveis, mas não apenas[^1], nos depararmos com dados que seguem esta distribuição. Neste artigo pretendemos demonstrar as principais características da distribuição lognormal, sua relação com a distribuição normal de Gauss, assim como debatemos a melhor maneira de se lidar com dados lognormais.
+
+[^1]: Dados estritamente positivos, como valores em moeda, altura, peso, etc, normalmente seguem a distribuição lognormal.
+
+# REVISÃO BIBLIOGRÁFICA
+
+## Formulação
+
+A formulação da distribuição lognormal para os parâmetros $\mu$ e $\sigma$ pode ser vista abaixo [@portalaction]
+
+$$\begin{cases}
+f(x;\mu, \sigma) = \frac{1}{x\sigma\sqrt{2\pi}}\exp(-\frac{(log(x) - \mu)^2}{2\sigma^2}) & \forall x > 0 \\ 
+0 & \text{ se } x = 0 
+\end{cases}$$
+
+
+## Propriedades
+
+### Valor Esperado e Variância
+
+O valor Esperado $\mathbb{E}$ de uma variável aleatória com distribuição lognormal $X$ é [@portalaction]:
+
+$$\mathbb{E}(X) = \exp \left (\mu + \frac{\sigma^2}{2} \right )$$
+E sua variância é:
+
+$$\newcommand{\Var}{\operatorname{Var}} \Var(X) = \exp (2\mu+\sigma^2)(\exp(\sigma^2)-1)$$
+
+
+### Medidas de Tendência Central
+
+A figura \ref{fig:densidade_medidas} mostra a posição das medidas de tendência central (moda, média e mediana) para um variável aleatória de distribuição log-normal.
+
+```{r densidade_medidas, echo = FALSE, fig.cap = "Ilustração das posições de medidas de tendência central numa distribuição lognormal."}
+# Medidas de Tendência Central da amostra
+mediana <- 1
+desvio <- exp(1)
+media <- mediana*exp(log(desvio)^2/2)
+moda <- mediana/exp(log(desvio)^2)
+x <- seq(0, 3, .05)
+y <- dlnorm(x, 
+            meanlog = log(mediana),
+            sdlog = log(desvio))
+data <- data.frame(x = x, y = y)
+# Gráfico Lognormal
+p_logN <- ggplot(data, aes(x = x, y = y)) +
+  geom_line() +
+  scale_y_continuous(limits = c(0, max(data$y)+.05), expand = c(0, 0)) +
+  scale_x_continuous(limits = c(0, max(data$x)), expand = c(0, 0)) +
+  geom_segment(aes(x = media, y = 0, xend = media, 
+                   yend = dlnorm(media, meanlog = log(mediana), sdlog = log(desvio)),
+                   colour = "Média")) +
+  geom_segment(aes(x = mediana, y = 0, xend = mediana,
+                   yend = dlnorm(mediana, meanlog = log(mediana), sdlog = log(desvio)),
+                   colour = "Mediana")) +
+  geom_segment(aes(x = moda, y = 0, xend = moda, 
+                   yend = dlnorm(moda, meanlog = log(mediana), sdlog = log(desvio)),
+                   colour = "Moda")) +
+  ylab("Densidade") +
+  theme(legend.position="bottom", legend.text=element_text(size=6), 
+        legend.title=element_text(size=8)) +
+  labs(title = "Distribuição Lognormal", subtitle = TeX("$\\mu = log(1)$, $\\sigma = log(e)$"))
+p_logN
+```
+
+### Efeito das variações do desvio-padrão na forma da distribuição
+
+```{r logs, echo = FALSE, fig.cap = "Distribuição lognormal com $\\mu = 0$ e diversos valores de $\\sigma$"}
+x <- seq(0, 3, 0.01)
+sigma <- c(2, 1.5, 1, .5, .25)
+y <- lapply(sigma, dlnorm, x = x, meanlog = log(1))
+data <- data.frame(x, y[[1]], y[[2]], y[[3]], y[[4]], y[[5]])
+colnames(data) <- c("x", "y1", "y2", "y3", "y4", "y5")
+data <- melt(data, id = 1)
+ggplot(data, aes(x = x, y = value, 
+                 color = factor(variable, labels = as.character(sigma)))) +
+  geom_line() +
+  scale_y_continuous(limits = c(0, max(data$value)), expand = c(0, 0)) + 
+  scale_x_continuous(limits = c(0, max(data$x)), expand = c(0, 0)) +
+  labs(title = "Distribuições lognormais",
+       subtitle = TeX("$\\mu = log(1) = 0$"),
+       color = TeX("$\\sigma$"))
+```
+
+### Relação com a distribuição normal
+
+Lembrando que a função densidade de probabilidade de uma variável aleatória com distribuição normal é dada por:
+
+$$f(t) = \frac{1}{\sigma\sqrt{2\pi}}\mathrm{e}^{-\frac{1}{2}\frac{(t-\mu)^2}{\sigma^2}}$$
+E que para a distribuição normal-padrão ($N(0,1)$) a função densidade de probabilidade torna-se:
+
+$$\varphi(t) = \frac{1}{\sqrt{2\pi}}\mathrm{e}^{-\frac{1}{2}t^2}$$
+
+Seja $X$ uma variável aleatória de distribuição normal padronizada ($X \sim N(0, 1)$), $f_X$ a função densidade de probabilidade e $Y = e^X$. Então ($F_Y$) é igual a: 
+
+$$F_Y(y) = \mathbb{P}(e^X\leq y) = \mathbb{P}(X \leq ln(Y)) = \int_{-\infty}^{ln(y)}f_X(x)dx = \int_{-\infty}^{ln(y)}\frac{1}{\sqrt{2\pi}}e^{-x^2/2}dx$$
+o que equivale a:
+
+$$F_Y(y) = \int_{0}^{y}\frac{1}{x}\frac{1}{\sqrt{2\pi}}e^{-ln(x)^2/2}$$
+
+Ou seja, a distribuição de uma variável $Y = e^X$, em que $X \sim N(0,1)$ é equivalente a distribuição de uma variável lognormal com parâmetros $\mu = 0$ e $\sigma = 1$.
+
+A figura \ref{fig:normal_lognormal} ilustra este fato.
+
+```{r normal_lognormal, echo = FALSE, out.width="100%", fig.cap = "Comparação entre distribuições normal e lognormal padronizadas."}
+# Gráfico Normal
+xvalues <- -4:4
+x <- data.frame(x = xvalues)
+p_N <- ggplot(x, aes(x = xvalues)) + 
+  stat_function(fun = dnorm) + 
+  geom_segment(aes(x = 0, y = 0, xend = 0, yend = 0.4, 
+                   colour = "Moda = Média = Mediana")) +
+  scale_y_continuous(limits = c(0, 0.5), expand = c(0, 0)) +
+  scale_x_continuous(limits = c(-4, 4), expand = c(0, 0)) +
+  theme(legend.position="bottom", legend.text=element_text(size=6), 
+        legend.title=element_text(size=8)) + 
+  labs(title = "Normal", subtitle = TeX("$\\mu = log(1) = 0$, $\\sigma = log(e) = 1$"),
+       x = "x",
+       y = "Densidade")
+cowplot::plot_grid(p_logN, p_N, ncol = 2)
+```
+
+
+### Analogia com o Teorema do Limite Central
+
+Assim como o resultado da soma de diversas variáveis independentes com distribuições quaisquer resulta numa variável aleatória de distribuição normal (Teorema do Limite Central), o produto de diversas variáveis aleatórias resulta numa distribuição lognormal.
+
+# EXEMPLO
+
+## Dados
+
+Os dados utilizados aqui são oriundos de Hochheim [-@hochheim, 21-22] e são reproduzidos no [ANEXO I].
+
+```{r, echo = FALSE}
+dados <- centro_2015@data
+```
+
+
+## Ajuste de distribuições aos dados
+
+```{r, echo = FALSE, warning = FALSE, results='hide', fig.show='hold', out.width="49%"}
+f1 <- fitdist(dados$valor[1:50], "lnorm", method = "mle")
+f2 <- fitdist(dados$valor[1:50], "lnorm", method = "mme")
+f3 <- fitdist(dados$valor[1:50], "weibull")
+f4 <- fitdist(dados$valor[1:50], "gamma", method = "mme")
+plot.legend <- c("lognormal (MLE)", "lognormal (MME)", "weibull", "gamma")
+cdfcomp(list(f1, f2, f3, f4), do.points=FALSE, xlogscale = TRUE, main = "CDF plot", legendtext = plot.legend)
+denscomp(list(f1, f2, f3, f4), demp=TRUE, main = "Density plot", legendtext = plot.legend)
+qqcomp(list(f1, f2, f3, f4), legendtext = plot.legend)
+f1
+f2
+```
+
+
+## Gráficos
+
+As figuras \ref{fig:densidade} e \ref{fig:hist_densidade} mostram que os valores observados para a variável \code{valor} do conjunto de dados mencionados acima [@hochheim, 21-22] apresentam distribuição aproximadamente lognormal, com parâmetros $\mu = \bar{ln(valor)}$
+
+\newpage
+
+a. Densidade
+
+```{r densidade, echo = FALSE, fig.cap = "Função densidade de probabilidade com parâmetros obtidos dos dados da variável \\code{valor}"}
+trellis.par.set(theme=theme.mosaic()) # change default color scheme for lattice
+plotDist("lnorm", 
+         meanlog = mean(log(dados$valor), na.rm = TRUE),
+         sdlog = sd(log(dados$valor), na.rm = TRUE)
+         )
+```
+
+b. Histograma com densidade superposta
+
+```{r hist_densidade, echo = FALSE, fig.keep='last', fig.cap = "Histograma das variável \\code{valor} com função densidade de probabilidade superposta."}
+histogram(~ valor, data = dados)
+plotDist("lnorm", 
+         meanlog = mean(log(dados$valor), na.rm = TRUE),
+         sdlog = sd(log(dados$valor), na.rm = TRUE), 
+         add = TRUE)
+```
+
+c. Cumulativa
+
+```{r cdf, echo = FALSE, fig.cap = "Função cumulativa de densidade de probabilidade com parâmetros obtidos dos dados da variável \\code{valor}"}
+plotDist("lnorm", 
+         meanlog = mean(log(dados$valor), na.rm = TRUE),
+         sdlog = sd(log(dados$valor), na.rm = TRUE), 
+         kind = "cdf")
+```
+
+d. Distribuição da variável $ln(valor)$
+
+A figura \ref{fig:hist_densidade2}
+
+```{r hist_densidade2, echo = FALSE, fig.keep='last', fig.cap = "Histograma com função densidade de probabilidade normal superposta"}
+histogram(~ log(valor), data = dados, main = "Histograma de ln(valor)", 
+          sub = "Com pdf N(mean(ln(valor)), sd(ln(valor)) superposta")
+plotDist("norm", 
+         mean = mean(log(dados$valor), na.rm = TRUE),
+         sd = sd(log(dados$valor), na.rm = TRUE), 
+         add = TRUE
+         )
+```
+
+## Modelos
+
+Detectando-se a presença de variável resposta com distribuição lognormal, pode-se proceder da seguinte maneira:
+
+### Modelo linear com a variável resposta transformada
+
+É fácil mostrar que o modelo linear com a variável resposta logaritmizada, ou seja, com distribuição normal, é melhor ajustado que o modelo linear de uma variável resposta lognormal.
+
+A função máxima verossimilhança de Box-Cox também vai apresentar como transformação ótima a transformação logarítimica, como demonstra a figura \ref{fig:boxcox}
+
+```{r boxcox, echo = FALSE, fig.cap = "Gráfico da função verossimilhança de Box-Cox"}
+fit <- lm(valor ~. , data = dados)
+gg_boxcox(fit)
+```
+
+Na tabela \ref{tab:tabela} é possível comparar os modelos com e sem a transformação da variável resposta, assim como o modelo de regressão de poisson, que será visto na próxima seção.
+
+```{r tabela, echo = FALSE, results="asis"}
+fit1 <- update(fit, log(valor)~.)
+fit$AIC <- AIC(fit)
+fit1$AIC <- AIC(fit1)
+stargazer(fit, fit1, header = FALSE, type = type, label = "tab:tabela",
+          title = "Comparação entre modelos com e sem transformação da variável resposta",
+          ci = TRUE, report = "vcstp*")
+```
+
+## Retransformação de variáveis
+
+O problema da transformação da variável resposta no logarítmo da variável resposta original, é que devemos estudar como proceder na retranformação da variável, para efetuar a avaliação do imóvel.
+
+Para isto, utilizamos o valor esperado da variável log-normal, ou seja:
+
+$$\mathbb{E}(X) = \exp(x + 0.5\sigma^2)$$
+
+# CONCLUSÃO
+
+Foi possível demonstrar de maneira gráfica que os dados da variável `valor` apresentados se ajustam bem a uma distribuição lognormal equivalente. Por definição, então, o logaritmo da  variável possui distribuição normal.
+
+0 valor mais provável para a variável resposta, então, é Valor Esperado da variável. Logo, a retransformação da variável deve ser feita para a média da variável log-normal.
+
+\newpage
+
+# ANEXO I {-}
+
+```{r, echo = FALSE}
+kable(dados[complete.cases(dados),], 
+      format = ifelse(type == "html", "markdown", "latex"),
+      booktabs = TRUE) %>%
+  kable_styling(latex_options = "striped")
+```
+
+# REFERÊNCIAS {-}

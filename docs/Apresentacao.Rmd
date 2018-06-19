@@ -1,0 +1,228 @@
+---
+title: "Distribuição Lognormal"
+subtitle: "Características e gráficos"
+author: 
+- "Luiz Fernando Palin Droubi"
+- "Norberto Hochheim"
+- "Willian Zonato"
+date: "`r format(Sys.time(), '%d/%m/%Y')`"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    self_contained: TRUE
+    chakra: libs/remark-latest.min.js
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+    css: ["default", "estilo.css"]
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE, servr.daemon = TRUE)
+library(ggplot2)
+library(ggthemes)
+theme_set(theme_few())
+library(reshape2)
+library(latex2exp)
+```
+
+background-image: url(images/logs-1.png)
+
+---
+class: inverse, center, middle
+
+# Definição e propriedades
+
+---
+
+# Definição
+
+Uma variável aleatória $X$ tem distribuição lognormal se seu logaritmo $Y = log(X)$ tem  distribuição normal <sup>1</sup>.
+
+.footnote[
+[1]: Ver [link](http://www.portalaction.com.br/probabilidades/615-distribuicao-log-normal)
+]
+
+$$\begin{cases}
+f(x;\mu, \sigma) = \frac{1}{x\sigma\sqrt{2\pi}}exp(-\frac{(log(x) - \mu)^2}{2\sigma^2}) & \forall x > 0\\ 
+0 & \text{se} x = 0
+\end{cases}$$
+
+em que:
+
+- $\mu$ é a mediana
+- $\sigma > 0$ é o desvio-padrão
+
+--
+
+ou
+
+$$f(x;\mu, \sigma) = \varphi(\frac{\ln{x}-\mu}{\sigma})\frac{1}{\sigma x}$$
+
+em que:
+
+$\varphi$ é a função densidade de probabilidade da distribuição normal padrão.
+
+
+---
+
+# Propriedades
+
+--
+
+
+
+--
+
+- Assim como o resultado da soma de várias variáveis independentes resulta numa distribuição normal (Teorema do Limite Central);
+
+--
+
+- O produto de diversas variáveis independentes resulta numa distribuição lognormal.
+
+--
+
+- O valor esperado (média) de $X$ é:
+
+$$E(X) = E(exp(Y)) = exp(E(Y) + 0,5\sigma^2)$$
+$$ E(x) = exp(\mu + 0,5\sigma^2)$$
+--
+
+- O valor da moda é:
+
+$$M_o=exp(E(Y)-\sigma^2)$$
+
+---
+class: inverse, center, middle
+
+# Gráficos
+
+---
+class: inverse, center, middle
+
+# Simples
+
+---
+class: middle
+
+```{r simples, message = FALSE, fig.show = "hold", out.width = "50%", fig.height=4, dev = "svg"}
+library(appraiseR)
+df <- centro_2015@data
+# 1º Modo -- Difícil
+library(ggplot2)
+ggplot(df, aes(x = valor)) + 
+  stat_function(fun = "dlnorm", 
+                args = list(meanlog = mean(log(df$valor), na.rm = TRUE),
+                            sdlog = sd(log(df$valor), na.rm = TRUE))) 
+# 2º Modo -- Fácil
+library(mosaic)
+plotDist("lnorm", 
+         meanlog = mean(log(df$valor), na.rm = TRUE),
+         sdlog = sd(log(df$valor), na.rm = TRUE))
+```
+
+---
+class: inverse, center, middle
+
+# Histograma com densidade superposta
+
+---
+
+```{r hist_densidade, fig.keep='last', fig.height=4, dev = "svg"}
+histogram(~ valor, data = df)
+plotDist("lnorm", 
+         meanlog = mean(log(df$valor), na.rm = TRUE),
+         sdlog = sd(log(df$valor), na.rm = TRUE), 
+         add = TRUE)
+```
+
+---
+class: inverse, center, middle
+
+# Lognormal com distintos desvio-padrão
+
+---
+class: middle
+
+```{r logs, fig.height=3, dev = "svg"}
+x <- seq(0, 3, 0.01)
+sigma <- c(2, 1.5, 1, .5, .25)
+y <- lapply(sigma, dlnorm, x = x, meanlog = log(1))
+data <- data.frame(x, y[[1]], y[[2]], y[[3]], y[[4]], y[[5]])
+colnames(data) <- c("x", "y1", "y2", "y3", "y4", "y5")
+data <- melt(data, id = 1)
+ggplot(data, aes(x = x, y = value,
+                 color = factor(variable, 
+                                labels = as.character(sigma)))) +
+  geom_line() +
+  scale_y_continuous(limits = c(0, max(data$value)), expand = c(0, 0)) +
+  scale_x_continuous(limits = c(0, max(data$x)), expand = c(0, 0)) +
+  labs(title = "Distribuições Lognormais", subtitle = TeX("$\\mu = log(1)$"), color = TeX("$\\sigma$"))
+```
+
+---
+class: inverse, center, middle
+
+# Lognormal com medidas de tendência central
+
+---
+
+```{r densidade_medidas, fig.height=4, dev = "svg"}
+# Medidas de Tendência Central da amostra
+mediana <- 1
+desvio <- exp(1)
+media <- mediana*exp(log(desvio)^2/2)
+moda <- mediana/exp(log(desvio)^2)
+x <- seq(0, 3, .05)
+y <- dlnorm(x,
+            meanlog = log(mediana),
+            sdlog = log(desvio))
+data <- data.frame(x = x, y = y)
+# Gráfico Lognormal
+p_logN <- ggplot(data, aes(x = x, y = y)) + geom_line() +
+  scale_y_continuous(limits = c(0, max(data$y)+.05), expand = c(0, 0)) +
+  scale_x_continuous(limits = c(0, max(data$x)), expand = c(0, 0)) +
+  geom_segment(aes(x = media, y = 0, xend = media, 
+                   yend = dlnorm(media, meanlog = log(mediana),
+                                 sdlog = log(desvio)), colour = "Média")) +
+  geom_segment(aes(x = mediana, y = 0, xend = mediana,
+                   yend = dlnorm(mediana, meanlog = log(mediana), 
+                                 sdlog = log(desvio)), colour = "Mediana")) +
+  geom_segment(aes(x = moda, y = 0, xend = moda, 
+                   yend = dlnorm(moda, meanlog = log(mediana), 
+                                 sdlog = log(desvio)), colour = "Moda")) +
+  ylab("Densidade") +
+  theme(legend.position="bottom") +
+  labs(title = "Lognormal", 
+       subtitle = TeX("$\\mu = log(1)$, $\\sigma = log(e)$"))
+```
+
+---
+```{r logN,  fig.height=4, dev = "svg"}
+p_logN
+```
+
+---
+class: inverse, center, middle
+
+# Comparacação entre distribuições *normal* e *lognormal*
+
+---
+
+```{r normal_lognormal, fig.height=3.5, dev = "svg"}
+# Gráfico Normal
+xvalues <- -4:4
+x <- data.frame(x = xvalues)
+p_N <- ggplot(x, aes(x = xvalues)) + stat_function(fun = dnorm) + 
+  geom_segment(aes(x = 0, y = 0, xend = 0, yend = 0.4, 
+                   colour = "Moda = Média = Mediana")) +
+  scale_y_continuous(limits = c(0, 0.5), expand = c(0, 0)) +
+  scale_x_continuous(limits = c(-4, 4), expand = c(0, 0)) +
+  theme(legend.position="bottom") + 
+  labs(title = "Normal", subtitle = TeX("$\\mu = log(1) = 0$, $\\sigma = log(e) = 1$"),
+       x = "x",
+       y = "Densidade")
+cowplot::plot_grid(p_logN, p_N, ncol = 2)
+```
+
