@@ -15,6 +15,9 @@ output:
   html_document:
     fig_caption: yes
     keep_md: yes
+  word_document: 
+    fig_caption: yes
+    reference_docx: COBRAC-2018_modelo_artigo_02_08_06_2018.docx
 classoption: a4paper
 documentclass: article
 link-citations: yes
@@ -27,6 +30,8 @@ header-includes:
 ```{r, setup, include=FALSE}
 library(appraiseR)
 library(fitdistrplus)
+library(lmtest)
+library(sandwich)
 library(lindia)
 library(mosaic)
 library(latticeExtra)
@@ -40,12 +45,16 @@ library(reshape2)
 library(ggthemes)
 theme_set(theme_few())
 trellis.par.set(theme=theEconomist.theme()) # change default color scheme for lattice
-knitr::opts_chunk$set(fig.path = "images/", dev = "png", dpi = 600, 
-                      fig.pos = "H", fig.align = "center", out.width="70%", 
+knitr::opts_chunk$set(echo = FALSE, fig.path = "images/", dev = "png", dpi = 600, 
+                      fig.pos = "H", fig.align = "center", out.width="50%", 
                       tidy=FALSE, size="small")
 type <- knitr::opts_knit$get("rmarkdown.pandoc.to")
 options(digits = 10)
 ```
+
+# Resumo {-}
+
+Pretende-se com este artigo detalhar o motivo pelo qual a transformação de variável dependente pela função logaritmo é frequentemente adequada na área de avaliação de imóveis. Um procedimento muito comum nesta área é a adoção de transformações para a obtenção de um "melhor" modelo de regressão. A mais usual e preferida de muitos avaliadores é a função logaritmo, especialmente para a variável dependente. Muitas vezes esta transformação é adequada e percebe-se uma notória melhora no ajuste do modelo. Outras vezes, esta transformação pode não ser adequada. Apesar do modelo aparentar-se melhor ajustado, problemas podem ocorrer quanto às verificações das hipóteses clássicas da regressão, as quais nem sempre os avaliadores estão tão atentos quanto estão com as verificações dos intervalos de confiança e níveis de significância. No entanto, o avaliador que assim procede estará verificando intervalos de confiança e níveis de significâncias incorretos, haja vista que a hipótese da heteroscedasticidade implica na incorreção destas inferências. Entendemos que a melhor maneira para apresentar aos avaliadores a importância de criteriosas escolhas de transformações seja através da análise do histograma da variável original e transformada. Normalmente, uma boa escolha de transformação leva à uma distribuição aproximadamente normal. Quando a variável dependente apresenta distribuição lognormal, esta transformação é a transformação logaritmica. Desta maneira, demonstramos as características básicas desta distribuição, sua formulação, características além do seu relacionamento com a distribuição normal. Por fim, demonstramos as implicações da adoção da transformação da variável dependente e abordamos o problema da retransformação da variável dependente à sua escala original.
 
 # INTRODUÇÃO
 
@@ -63,7 +72,7 @@ A distribuição lognormal apresenta diversas aplicações práticas. É comum, 
 
 ## Formulação
 
-A formulação da distribuição lognormal para os parâmetros $\mu$ e $\sigma$ pode ser vista abaixo [@portalaction]
+A formulação da distribuição lognormal para os parâmetros $\mu$ e $\sigma$ pode ser vista abaixo [@farias]
 
 $$\begin{cases}
 f(x;\mu, \sigma) = \frac{1}{x\sigma\sqrt{2\pi}}\exp(-\frac{(log(x) - \mu)^2}{2\sigma^2}) & \forall x > 0 \\ 
@@ -75,7 +84,7 @@ f(x;\mu, \sigma) = \frac{1}{x\sigma\sqrt{2\pi}}\exp(-\frac{(log(x) - \mu)^2}{2\s
 
 ### Valor Esperado e Variância
 
-O valor Esperado $\mathbb{E}$ de uma variável aleatória com distribuição lognormal $X$ é [@portalaction]:
+O valor Esperado $\mathbb{E}$ de uma variável aleatória com distribuição lognormal $X$ é [@farias]:
 
 $$\mathbb{E}(X) = \exp \left (\mu + \frac{\sigma^2}{2} \right )$$
 E sua variância é:
@@ -87,7 +96,7 @@ $$\newcommand{\Var}{\operatorname{Var}} \Var(X) = \exp (2\mu+\sigma^2)(\exp(\sig
 
 A figura \ref{fig:densidade_medidas} mostra a posição das medidas de tendência central (moda, média e mediana) para um variável aleatória de distribuição log-normal.
 
-```{r densidade_medidas, echo = FALSE, fig.cap = "Ilustração das posições de medidas de tendência central numa distribuição lognormal."}
+```{r densidade_medidas, fig.cap = "Ilustração das posições de medidas de tendência central numa distribuição lognormal."}
 # Medidas de Tendência Central da amostra
 mediana <- 1
 desvio <- exp(1)
@@ -121,7 +130,7 @@ p_logN
 
 ### Efeito das variações do desvio-padrão na forma da distribuição
 
-```{r logs, echo = FALSE, fig.cap = "Distribuição lognormal com $\\mu = 0$ e diversos valores de $\\sigma$"}
+```{r logs, fig.cap = "Distribuição lognormal com $\\mu = 0$ e diversos valores de $\\sigma$"}
 x <- seq(0, 3, 0.01)
 sigma <- c(2, 1.5, 1, .5, .25)
 y <- lapply(sigma, dlnorm, x = x, meanlog = log(1))
@@ -158,7 +167,7 @@ Ou seja, a distribuição de uma variável $Y = e^X$, em que $X \sim N(0,1)$ é 
 
 A figura \ref{fig:normal_lognormal} ilustra este fato.
 
-```{r normal_lognormal, echo = FALSE, out.width="100%", fig.cap = "Comparação entre distribuições normal e lognormal padronizadas."}
+```{r normal_lognormal, out.width="100%", fig.cap = "Comparação entre distribuições normal e lognormal padronizadas."}
 # Gráfico Normal
 xvalues <- -4:4
 x <- data.frame(x = xvalues)
@@ -181,6 +190,23 @@ cowplot::plot_grid(p_logN, p_N, ncol = 2)
 
 Assim como o resultado da soma de diversas variáveis independentes com distribuições quaisquer resulta numa variável aleatória de distribuição normal (Teorema do Limite Central), o produto de diversas variáveis aleatórias resulta numa distribuição lognormal.
 
+### Transformação de variável e Homoscedasticidade
+
+De acordo com Matloff [-@matloff2017, 138], se uma variável aleatória $W$ é aproximadamente normal, com baixo coeficiente de variação ($CV = \sigma/\mu$), e $g(W)$ é uma função suave, então a nova variável também será aproximadamente normal, com média $g(EW)$ e variância:
+
+$$[g'(EW)]^2\text{Var}(W)$$
+
+Assumindo que os erros de uma função de regressão sejam heteroscedásticos, seguindo uma função conhecida $\sigma(t) = \mu(t)$, se aplicarmos a função logaritmo natural à variável dependente, segundo a equação acima, teremos[^2]:
+
+$$\frac{1}{\mu^2(t)}\mu^2(t) = 1$$
+
+Ou seja, o uso da transformação logaritmo natural, para este caso em particular, conduz à homoscedasticidade do modelo.
+
+De acordo com Matloff [-@matloff2017, 138], ainda, se $\sigma(t) = \sqrt{\mu(t)}$, a transformação raiz-quadrada é que traria de volta a homoscedasticidade [^3].
+
+[^2]: Lembrando que a derivada da função logaritmo natural é $\frac{d}{dt}\ln t= \frac{1}{t}$ e que $\text{Var}(W) = \sigma^2(W)$
+[^3]: $\frac{d}{dt}\sqrt{t} = \frac{0,5}{\sqrt{t}} \rightarrow \text{Var}(\sqrt{W}) = \left (\frac{0,5}{\sqrt{t}} \right)^2(\sqrt{t})^2 = 0,25$
+
 # EXEMPLO
 
 ## Dados
@@ -194,7 +220,7 @@ dados <- centro_2015@data
 
 ## Ajuste de distribuições aos dados
 
-```{r, echo = FALSE, warning = FALSE, results='hide', fig.show='hold', out.width="49%"}
+```{r, warning = FALSE, results='hide', fig.show='hold', out.width="49%"}
 f1 <- fitdist(dados$valor[1:50], "lnorm", method = "mle")
 f2 <- fitdist(dados$valor[1:50], "lnorm", method = "mme")
 f3 <- fitdist(dados$valor[1:50], "weibull")
@@ -216,7 +242,7 @@ As figuras \ref{fig:densidade} e \ref{fig:hist_densidade} mostram que os valores
 
 a. Densidade
 
-```{r densidade, echo = FALSE, fig.cap = "Função densidade de probabilidade com parâmetros obtidos dos dados da variável \\code{valor}"}
+```{r densidade, fig.cap = "Função densidade de probabilidade com parâmetros obtidos dos dados da variável \\code{valor}"}
 trellis.par.set(theme=theme.mosaic()) # change default color scheme for lattice
 plotDist("lnorm", 
          meanlog = mean(log(dados$valor), na.rm = TRUE),
@@ -226,7 +252,7 @@ plotDist("lnorm",
 
 b. Histograma com densidade superposta
 
-```{r hist_densidade, echo = FALSE, fig.keep='last', fig.cap = "Histograma das variável \\code{valor} com função densidade de probabilidade superposta."}
+```{r hist_densidade, fig.keep='last', fig.cap = "Histograma das variável \\code{valor} com função densidade de probabilidade superposta."}
 histogram(~ valor, data = dados)
 plotDist("lnorm", 
          meanlog = mean(log(dados$valor), na.rm = TRUE),
@@ -236,7 +262,7 @@ plotDist("lnorm",
 
 c. Cumulativa
 
-```{r cdf, echo = FALSE, fig.cap = "Função cumulativa de densidade de probabilidade com parâmetros obtidos dos dados da variável \\code{valor}"}
+```{r cdf, fig.cap = "Função cumulativa de densidade de probabilidade com parâmetros obtidos dos dados da variável \\code{valor}"}
 plotDist("lnorm", 
          meanlog = mean(log(dados$valor), na.rm = TRUE),
          sdlog = sd(log(dados$valor), na.rm = TRUE), 
@@ -247,7 +273,7 @@ d. Distribuição da variável $ln(valor)$
 
 A figura \ref{fig:hist_densidade2}
 
-```{r hist_densidade2, echo = FALSE, fig.keep='last', fig.cap = "Histograma com função densidade de probabilidade normal superposta"}
+```{r hist_densidade2, fig.keep='last', fig.cap = "Histograma com função densidade de probabilidade normal superposta"}
 histogram(~ log(valor), data = dados, main = "Histograma de ln(valor)", 
           sub = "Com pdf N(mean(ln(valor)), sd(ln(valor)) superposta")
 plotDist("norm", 
@@ -263,21 +289,26 @@ Detectando-se a presença de variável resposta com distribuição lognormal, po
 
 ### Modelo linear com a variável resposta transformada
 
-É fácil mostrar que o modelo linear com a variável resposta logaritmizada, ou seja, com distribuição normal, é melhor ajustado que o modelo linear de uma variável resposta lognormal.
+É fácil mostrar que o modelo linear com a variável resposta logaritmizada, ou seja, com distribuição normal, é melhor ajustado que o modelo linear de uma variável resposta lognormal. Além disso, o modelo linear, sem transformação, é heteroscedástico.
+
+```{r}
+fit <- lm(valor ~. , data = dados)
+bptest(fit)
+```
 
 A função máxima verossimilhança de Box-Cox também vai apresentar como transformação ótima a transformação logarítimica, como demonstra a figura \ref{fig:boxcox}
 
-```{r boxcox, echo = FALSE, fig.cap = "Gráfico da função verossimilhança de Box-Cox"}
-fit <- lm(valor ~. , data = dados)
+```{r boxcox, fig.cap = "Gráfico da função verossimilhança de Box-Cox"}
 gg_boxcox(fit)
 ```
 
-Na tabela \ref{tab:tabela} é possível comparar os modelos com e sem a transformação da variável resposta, assim como o modelo de regressão de poisson, que será visto na próxima seção.
+Na tabela \ref{tab:tabela} é possível comparar os modelos com e sem a transformação da variável resposta. Porém, como o modelo sem transformação é heteroscedástico, os intervalos de confiança dos regressores e os p-valores mostrados na  tabela são inválidos, pois deve-se calcular os erros robustos antes de computá-los, o que será visto na próxima seção.
 
-```{r tabela, echo = FALSE, results="asis"}
+```{r tabela, results="asis"}
 fit1 <- update(fit, log(valor)~.)
 fit$AIC <- AIC(fit)
 fit1$AIC <- AIC(fit1)
+s <- summary(fit1)
 stargazer(fit, fit1, header = FALSE, type = type, label = "tab:tabela",
           title = "Comparação entre modelos com e sem transformação da variável resposta",
           ci = TRUE, report = "vcstp*")
@@ -287,9 +318,76 @@ stargazer(fit, fit1, header = FALSE, type = type, label = "tab:tabela",
 
 O problema da transformação da variável resposta no logarítmo da variável resposta original, é que devemos estudar como proceder na retranformação da variável, para efetuar a avaliação do imóvel.
 
-Para isto, utilizamos o valor esperado da variável log-normal, ou seja:
+### A desigualdade de Jensen
 
-$$\mathbb{E}(X) = \exp(x + 0.5\sigma^2)$$
+Segundo Matloff [-@matloff2017, 142], a desigualdade de Jensen (aplicada à estatística) se traduz na seguinte expressão, válida para funções convexas:
+
+$$\mathbb{E}[h(V)] \geq h(\mathbb{E}[V])$$
+
+Isto aplicado no caso da transformação logarítimica, que é uma função côncava, se reduz à expressão abaixo [@matloff2017, 142]:
+
+$$\mathbb{E}[\ln Y|X = t] \leq \ln(E[Y|X = t])$$
+
+Para Matloff, então, como a igualdade só irá acontecer em poucos casos especiais, a função de regressão de $\ln(Y)$ será quase sempre menor do que o logaritmo natural da função de regressão de $Y$, de tal forma que a suposição que dado uma variável aleatória $Y$ tal que assumimos que $E(Y|X = t) = e^{\beta_0 + \beta_1t}$, não podemos concluir de imediato que um modelo linear razoável seria da forma $E(\ln Y|X = t) = \beta_0 + \beta_1t$, pois, pela desigualdade de Jensen, se temos dados significantemente heteroscedásticos da variável original ($Y$), a discrepância entre os dois lados da desigualdade acima poderia variar bastante com $t$, potencialmente produzindo uma grande distorção à forma da curva de regressão [@matloff2017, 143]. Segundo Becker [-@becker, 4], a desigualdade de Jensen pode ser transformada numa igualdade do tipo:
+
+$$\mathbb{E}[f(X)] = f(\mathbb{E}[X]) + \Delta$$
+E, de acordo com o mesmo [-@becker, 5], o valor de $\Delta$, chamado de Defeito de Holder, é proporcional à variância da variável aleatória $X$, tal que se $f: [a, b] \rightarrow \mathbb{R}$ é duas vezes continuamente diferenciável e existem limites finitos $m$ e $M$ tais que $0 \leq m \leq f''(x) \leq M$ para todo $x \in [a,b]$, então existe um valor $\mu \in [m, M]$ para o qual a fórmula abaixo é válida:
+
+$$\mathbb{E}[f(X)] - f(\mathbb{E}[X]) = \frac{1}{2}\mu \mathrm{Var} (X)$$
+Em suma, o valor de $\Delta$ é proporcional à variância de $X$ ($\Delta \propto \sigma^2(X)$).
+
+Deste modo, existem na literatura diversos estudos sobre qual seria o "melhor" estimador -- paramétrico ou não-paramétrico -- para a variável resposta original, quando da ocorrência da transformação da variável pela função logaritmo natural, como pode ser visto em @Duan, @meulenberg1965 e @shen.
+
+Entendemos que, na precisão necessária para a área de avaliação de imóveis, é suficiente a adoção do estimador teórico, apesar do funcionamento dos estimadores não-paramétricos ter sido demonstrado mais eficiente do que ele.
+
+$$\mathbb{E}(Y|X) = \exp(\beta_0 + \beta_1X + 0.5\sigma^2)$$
+
+### Modelo linear com posterior correção da heteroscedasticidade
+
+#### Erros-padrão robustos
+
+a. Coeficientes
+
+```{r tabela2, results='asis'}
+cov <- vcovHC(fit, type = "HC")
+robust.se <- sqrt(diag(cov))
+stargazer(fit, fit, header = FALSE, type = type, label = "tab:tabela2",
+          title = "Comparação entre modelos com e sem erros robustos",
+          ci = TRUE, report = "vcstp*",
+          se = list(NULL, robust.se), 
+          column.labels = c("default", "robust"))
+#coeftest(fit, vcov. = vcovHC)
+```
+
+b. Teste F
+
+Na tabela \ref{tab:tabela2}, o resultado para o teste F para o modelo robusto está errado. O teste deve ser refeito com a consideração dos erros robustos:
+
+```{r}
+waldtest(fit, vcov = vcovHC)
+```
+
+### Comparação das previsões para os dois modelos 
+
+```{r}
+p <- predict(fit1, interval = "confidence", level = 0.80)
+p <- as.data.frame(exp(p + .5*s$sigma^2))
+p$amplitude <- (p$upr-p$lwr)/p$fit
+```
+
+```{r}
+source("robust_predictions.R")
+p_rob <- robust_predictions(fit, rob = TRUE, level = 0.80)
+p_rob$amplitude <- (p_rob$ci.upper - p_rob$ci.lower)/p_rob$predicted.value
+```
+
+```{r}
+kable(list(p, p_rob), 
+      format = ifelse(type == "html", "markdown", "latex"),
+      booktabs = TRUE,
+      digits = 2, format.args = list(big.mark = ".", decimal.mark = ",")) 
+```
+
 
 # CONCLUSÃO
 
@@ -305,7 +403,7 @@ Foi possível demonstrar de maneira gráfica que os dados da variável `valor` a
 kable(dados[complete.cases(dados),], 
       format = ifelse(type == "html", "markdown", "latex"),
       booktabs = TRUE) %>%
-  kable_styling(latex_options = "striped")
+  kable_styling(latex_options = "striped") 
 ```
 
 # REFERÊNCIAS {-}
