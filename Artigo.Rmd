@@ -43,7 +43,7 @@ library(ggplot2)
 library(latex2exp)
 library(reshape2)
 library(ggthemes)
-theme_set(theme_few())
+theme_set(theme_bw())
 trellis.par.set(theme=theEconomist.theme()) # change default color scheme for lattice
 knitr::opts_chunk$set(echo = FALSE, fig.path = "images/", dev = "png", dpi = 600, 
                       fig.pos = "H", fig.align = "center", out.width="50%", 
@@ -146,6 +146,29 @@ ggplot(data, aes(x = x, y = value,
   labs(title = "Distribuições lognormais",
        subtitle = TeX("$\\mu = log(1) = 0$"),
        color = TeX("$\\sigma$"))
+```
+
+```{r video, echo = FALSE, fig.show='animate', fig.width=5, fig.height=4, interval=.1}
+x <- seq(0, 3, 0.05)
+mediana <- 1
+sigma <- seq(1.4, 0.1, -0.1)
+for (s in sigma) {
+  y <- dlnorm(x = x, meanlog = log(1), sdlog = s)
+  data <- data.frame(x, y)
+  media <- mediana*exp(s^2/2)
+  moda <- mediana/exp(s^2)
+  p <- ggplot(data, aes(x = x, y = y)) + geom_line() + 
+    geom_segment(aes(x = media, y = 0, xend = media, 
+                   yend = dlnorm(media, meanlog = log(mediana), sdlog = s),
+                   colour = "Média")) +
+    geom_segment(aes(x = mediana, y = 0, xend = mediana,
+                   yend = dlnorm(mediana, meanlog = log(mediana), sdlog = s),
+                   colour = "Mediana")) +
+    geom_segment(aes(x = moda, y = 0, xend = moda, 
+                   yend = dlnorm(moda, meanlog = log(mediana), sdlog = s),
+                   colour = "Moda"))
+  print(p)
+}
 ```
 
 ### Relação com a distribuição normal
