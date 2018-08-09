@@ -7,6 +7,8 @@ output:
   html_document:
     keep_md: yes
     self_contained: no
+header-includes:
+  - \usepackage{animate}
 ---
 
 Aprenda como plotar a distribuição lognormal de diversas formas, como esta:
@@ -19,21 +21,31 @@ library(ggplot2)
 library(reshape2)
 library(ggthemes)
 library(latex2exp)
-theme_set(theme_few())
+theme_set(theme_bw())
 ```
 
-```{r lognormal, echo = FALSE}
+```{r lognormal, echo = FALSE, fig.show='animate', fig.width=5, fig.height=4, interval=.1}
 x <- seq(0, 3, 0.05)
-sigma <- c(5, 1, .5, .25)
-y <- lapply(sigma, dlnorm, x = x, meanlog = log(1))
-data <- data.frame(x, y[[1]], y[[2]], y[[3]], y[[4]])
-colnames(data) <- c("x", "y1", "y2", "y3", "y4")
-data <- melt(data, id = 1)
-ggplot(data, aes(x = x, y = value, 
-                 color = factor(variable, labels = c("5", "1", ".5", ".25")))) +
-  geom_line() +
-  scale_y_continuous(limits = c(0, max(data$value)), expand = c(0, 0)) + 
-  scale_x_continuous(limits = c(0, max(data$x)), expand = c(0, 0)) +
-  labs(color = TeX("$\\sigma$"))
+mediana <- 1
+sigma <- seq(1.4, 0.1, -0.1)
+for (s in sigma) {
+  y <- dlnorm(x = x, meanlog = log(1), sdlog = s)
+  data <- data.frame(x, y)
+  media <- mediana*exp(s^2/2)
+  moda <- mediana/exp(s^2)
+  p <- ggplot(data, aes(x = x, y = y)) + geom_line() + 
+    geom_segment(aes(x = media, y = 0, xend = media, 
+                   yend = dlnorm(media, meanlog = log(mediana), sdlog = s),
+                   colour = "Média")) +
+    geom_segment(aes(x = mediana, y = 0, xend = mediana,
+                   yend = dlnorm(mediana, meanlog = log(mediana), sdlog = s),
+                   colour = "Mediana")) +
+    geom_segment(aes(x = moda, y = 0, xend = moda, 
+                   yend = dlnorm(moda, meanlog = log(mediana), sdlog = s),
+                   colour = "Moda"))
+  print(p)
+}
 ```
+
+
 

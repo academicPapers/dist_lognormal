@@ -50,6 +50,7 @@ knitr::opts_chunk$set(echo = FALSE, fig.path = "images/", dev = "png", dpi = 600
                       tidy=FALSE, size="small")
 type <- knitr::opts_knit$get("rmarkdown.pandoc.to")
 options(digits = 10)
+source("cum_hist.R")
 ```
 
 # Resumo {-}
@@ -220,7 +221,7 @@ dados <- centro_2015@data
 
 ## Ajuste de distribuições aos dados
 
-```{r, warning = FALSE, results='hide', fig.show='hold', out.width="49%"}
+```{r fitdist, warning = FALSE, results='hide', fig.show='hold', out.width="49%", fig.cap = "Ajuste da distribuição empírica a diversas distribuições teóricas."}
 f1 <- fitdist(dados$valor[1:50], "lnorm", method = "mle")
 f2 <- fitdist(dados$valor[1:50], "lnorm", method = "mme")
 f3 <- fitdist(dados$valor[1:50], "weibull")
@@ -233,14 +234,17 @@ f1
 f2
 ```
 
+Percebe-se pela análise das figuras \ref{fig:fitdist} que o melhor ajuste se deu para a distribuição lognormal ajustada seja pelo método dos momentos (MME) ou pelo método da verossimilhança (MLE), haja vista que as outras distribuições inicialmente crescem mais rapidamente e tem pico mais achatado que os dados empíricos e as distribuições log-normais ajustadas.
 
 ## Gráficos
 
-As figuras \ref{fig:densidade} e \ref{fig:hist_densidade} mostram que os valores observados para a variável \code{valor} do conjunto de dados mencionados acima [@hochheim, 21-22] apresentam distribuição aproximadamente lognormal, com parâmetros $\mu = \bar{ln(valor)}$
+As figuras \ref{fig:densidade} a \ref{fig:hist_densidade2} mostram que os valores observados para a variável \code{valor} do conjunto de dados mencionados acima [@hochheim, 21-22] apresentam distribuição aproximadamente lognormal, com parâmetros $\mu = \bar{ln(valor)}$
 
 \newpage
 
 a. Densidade
+
+A figura \ref{fig:densidade} mostra o gráfico da função densidade de probabilidade (FDP) construídos com os parâmetros $\mu$ e $\sigma$  obtidos da variável valor.
 
 ```{r densidade, fig.cap = "Função densidade de probabilidade com parâmetros obtidos dos dados da variável \\code{valor}"}
 trellis.par.set(theme=theme.mosaic()) # change default color scheme for lattice
@@ -252,6 +256,8 @@ plotDist("lnorm",
 
 b. Histograma com densidade superposta
 
+A figura \ref{fig:hist_densidade} mostra o histograma dos dados da variável `valor`, superposto com a curva da função densidade de probabilidade (FDP) da figura \ref{fig:densidade}.
+
 ```{r hist_densidade, fig.keep='last', fig.cap = "Histograma das variável \\code{valor} com função densidade de probabilidade superposta."}
 histogram(~ valor, data = dados)
 plotDist("lnorm", 
@@ -262,16 +268,22 @@ plotDist("lnorm",
 
 c. Cumulativa
 
-```{r cdf, fig.cap = "Função cumulativa de densidade de probabilidade com parâmetros obtidos dos dados da variável \\code{valor}"}
+A figura \ref{fig:cdf} ilustra o gráfico da função cumulativa de probabilidade (FCP) para a variável `valor`.
+
+```{r cdf, fig.keep='last', fig.cap = "Função cumulativa de densidade de probabilidade com parâmetros obtidos dos dados da variável \\code{valor}"}
+# dados_ecdf <- ecdf(dados$valor)
+# plot(dados_ecdf)
+ecdfplot(~valor, data = dados)
 plotDist("lnorm", 
          meanlog = mean(log(dados$valor), na.rm = TRUE),
          sdlog = sd(log(dados$valor), na.rm = TRUE), 
-         kind = "cdf")
+         kind = "cdf",
+         add = T, col = "red")
 ```
 
 d. Distribuição da variável $ln(valor)$
 
-A figura \ref{fig:hist_densidade2}
+A figura \ref{fig:hist_densidade2} mostra a distribuição da variável $\ln(valor)$. Pode-se notar que, conforme esperado, já que a distribuição da variável `valor` é aproximadamente lognormal, seu logaritmo tem distribuição aproximadamente normal.
 
 ```{r hist_densidade2, fig.keep='last', fig.cap = "Histograma com função densidade de probabilidade normal superposta"}
 histogram(~ log(valor), data = dados, main = "Histograma de ln(valor)", 
@@ -287,9 +299,13 @@ plotDist("norm",
 
 Detectando-se a presença de variável resposta com distribuição lognormal, pode-se proceder da seguinte maneira:
 
+* Proceder com a transformação da variável resposta pela função logarítmica;
+* Proceder com a variável na escala original, corrigindo posteriormente a heteroscedasticidade com o método de Eickert-White;
+* Proceder com o Método dos Mínimos Quadrados Ponderados.
+
 ### Modelo linear com a variável resposta transformada
 
-É fácil mostrar que o modelo linear com a variável resposta logaritmizada, ou seja, com distribuição normal, é melhor ajustado que o modelo linear de uma variável resposta lognormal. Além disso, o modelo linear, sem transformação, é heteroscedástico.
+É fácil mostrar que o modelo linear com a variável resposta logaritmizada, ou seja, com distribuição normal, é melhor ajustado que o modelo linear de uma variável resposta lognormal. Na tabela \ref{tab:tabela}, no entanto, mostra-se que, para o presente caso, esta melhora de ajuste é modesta, próxima a 4,5%. Além disso, o modelo linear, sem transformação, é heteroscedástico.
 
 ```{r}
 fit <- lm(valor ~. , data = dados)
@@ -338,9 +354,12 @@ Em suma, o valor de $\Delta$ é proporcional à variância de $X$ ($\Delta \prop
 
 Deste modo, existem na literatura diversos estudos sobre qual seria o "melhor" estimador -- paramétrico ou não-paramétrico -- para a variável resposta original, quando da ocorrência da transformação da variável pela função logaritmo natural, como pode ser visto em @Duan, @meulenberg1965 e @shen.
 
+De acordo com Shen e Zhu [-@shen], com a simples aplicação da transformação inversa (exponencial) à aplicada na variável dependente (logarítimica), chegamos ao *Back-Transform* (BT) *Estimator*, que tem performance "muito pior do que os outros estimadores" [-@shen, 554]. De fato, o estimador BT seria mais apropriado para estimar a mediana [@shen, 554], no entanto a equação de regressão linear é uma equação para a média da variável dependente. Métodos de regressão à mediana [@koenker], então, seriam mais apropriados para este fim.
+
 Entendemos que, na precisão necessária para a área de avaliação de imóveis, é suficiente a adoção do estimador teórico, apesar do funcionamento dos estimadores não-paramétricos ter sido demonstrado mais eficiente do que ele.
 
 $$\mathbb{E}(Y|X) = \exp(\beta_0 + \beta_1X + 0.5\sigma^2)$$
+
 
 ### Modelo linear com posterior correção da heteroscedasticidade
 
@@ -353,7 +372,7 @@ cov <- vcovHC(fit, type = "HC")
 robust.se <- sqrt(diag(cov))
 stargazer(fit, fit, header = FALSE, type = type, label = "tab:tabela2",
           title = "Comparação entre modelos com e sem erros robustos",
-          ci = TRUE, report = "vcstp*",
+          ci = TRUE, report = "vcstp*", digit.separator = ".", decimal.mark = ",",
           se = list(NULL, robust.se), 
           column.labels = c("default", "robust"))
 #coeftest(fit, vcov. = vcovHC)
@@ -366,6 +385,19 @@ Na tabela \ref{tab:tabela2}, o resultado para o teste F para o modelo robusto es
 ```{r}
 waldtest(fit, vcov = vcovHC)
 ```
+
+### Mínimos quadrados ponderados
+
+De acordo com Matloff [-@matloff2017, 139], em princípio, o Método dos Mínimos Quadrados ponderados (MQP) fornece melhores estimativas para os coeficientes e inferência estatística correta mesmo na presença de heteroscedasticidade. Tal método consiste, analogamente ao Método dos Mínimos Quadrados Ordinários (MQO), em uma minimização. No caso dos MQO, minimiza-se a quantidade abaixo [@matloff2017, 69]: 
+
+$$\frac{1}{n} \sum_{i=1}^{n} (Y_i - \tilde{X}_i'b)^2$$
+
+Enquanto o MQP minimiza [@matloff2017, 133]:
+
+$$\frac{1}{n} \sum_{i=1}^{n} \frac{1}{w_i} (Y_i - \tilde{X}_i'b)^2$$
+
+Onde $w_i = \sigma^2(X_i)$.
+
 
 ### Comparação das previsões para os dois modelos 
 
@@ -391,10 +423,12 @@ kable(list(p, p_rob),
 
 # CONCLUSÃO
 
-Foi possível demonstrar de maneira gráfica que os dados da variável `valor` apresentados se ajustam bem a uma distribuição lognormal equivalente. Por definição, então, o logaritmo da  variável possui distribuição normal.
+Foi possível demonstrar de maneira gráfica que os dados da variável valor apresentados se ajustam bem a uma distribuição lognormal equivalente. Por definição, então, o logaritmo da variável possui distribuição normal.
 
-0 valor mais provável para a variável resposta, então, é Valor Esperado da variável. Logo, a retransformação da variável deve ser feita para a média da variável log-normal.
+Consideramos que o valor mais provável para a variável resposta é o seu Valor Esperado. Logo, a retransformação da variável deve ser feita para a média da variável log-normal.
 
+Uma alternativa seria a aplicação da regressão linear ponderada (ou mínimos quadrados ponderados). No entanto, o método de 
+Eickert-White parece ser adequado e sua aplicação menos complexa do que o método de regressão ponderada.
 \newpage
 
 # ANEXO I {-}

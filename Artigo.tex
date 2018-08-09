@@ -73,19 +73,20 @@
 }
 
 \setlength{\droptitle}{-2em}
+
   \title{Distribuição Log-Normal}
-  \pretitle{\vspace{\droptitle}\centering\huge}
+    \pretitle{\vspace{\droptitle}\centering\huge}
   \posttitle{\par}
-\subtitle{Propriedades e aplicações}
+  \subtitle{Propriedades e aplicações}
   \author{Luiz Fernando Palin Droubi\footnote{SPU/SC,
   \href{mailto:luiz.droubi@planejamento.gov.br}{\nolinkurl{luiz.droubi@planejamento.gov.br}}} \\ Norberto Hochheim\footnote{UFSC,
   \href{mailto:hochheim@gmail.com}{\nolinkurl{hochheim@gmail.com}}} \\ Willian Zonato\footnote{SPU/SC,
   \href{mailto:willian.zonato@planejamento.gov.br}{\nolinkurl{willian.zonato@planejamento.gov.br}}}}
-  \preauthor{\centering\large\emph}
+    \preauthor{\centering\large\emph}
   \postauthor{\par}
-  \predate{\centering\large\emph}
+      \predate{\centering\large\emph}
   \postdate{\par}
-  \date{22/06/2018}
+    \date{31/07/2018}
 
 \usepackage[brazil]{babel}
 \usepackage{graphicx}
@@ -106,7 +107,9 @@
 \usepackage{pdflscape}
 \usepackage{tabu}
 \usepackage{threeparttable}
+\usepackage{threeparttablex}
 \usepackage[normalem]{ulem}
+\usepackage{makecell}
 
 \usepackage{amsmath,amssymb}
 
@@ -309,12 +312,26 @@ no \protect\hyperlink{anexo-i}{ANEXO I}.
 \subsection{Ajuste de distribuições aos
 dados}\label{ajuste-de-distribuicoes-aos-dados}
 
-\begin{center}\includegraphics[width=0.49\linewidth]{images/unnamed-chunk-2-1} \includegraphics[width=0.49\linewidth]{images/unnamed-chunk-2-2} \includegraphics[width=0.49\linewidth]{images/unnamed-chunk-2-3} \end{center}
+\begin{figure}[H]
+
+{\centering \includegraphics[width=0.49\linewidth]{images/fitdist-1} \includegraphics[width=0.49\linewidth]{images/fitdist-2} \includegraphics[width=0.49\linewidth]{images/fitdist-3} 
+
+}
+
+\caption{Ajuste da distribuição empírica a diversas distribuições teóricas.}\label{fig:fitdist}
+\end{figure}
+
+Percebe-se pela análise das figuras \ref{fig:fitdist} que o melhor
+ajuste se deu para a distribuição lognormal ajustada seja pelo método
+dos momentos (MME) ou pelo método da verossimilhança (MLE), haja vista
+que as outras distribuições inicialmente crescem mais rapidamente e tem
+pico mais achatado que os dados empíricos e as distribuições log-normais
+ajustadas.
 
 \subsection{Gráficos}\label{graficos}
 
-As figuras \ref{fig:densidade} e \ref{fig:hist_densidade} mostram que os
-valores observados para a variável \code{valor} do conjunto de dados
+As figuras \ref{fig:densidade} a \ref{fig:hist_densidade2} mostram que
+os valores observados para a variável \code{valor} do conjunto de dados
 mencionados acima (HOCHHEIM, \protect\hyperlink{ref-hochheim}{2015}, pp.
 21--22) apresentam distribuição aproximadamente lognormal, com
 parâmetros \(\mu = \bar{ln(valor)}\)
@@ -327,6 +344,10 @@ parâmetros \(\mu = \bar{ln(valor)}\)
 \item
   Densidade
 \end{enumerate}
+
+A figura \ref{fig:densidade} mostra o gráfico da função densidade de
+probabilidade (FDP) construídos com os parâmetros \(\mu\) e \(\sigma\)
+obtidos da variável valor.
 
 \begin{figure}[H]
 
@@ -345,6 +366,10 @@ parâmetros \(\mu = \bar{ln(valor)}\)
   Histograma com densidade superposta
 \end{enumerate}
 
+A figura \ref{fig:hist_densidade} mostra o histograma dos dados da
+variável \texttt{valor}, superposto com a curva da função densidade de
+probabilidade (FDP) da figura \ref{fig:densidade}.
+
 \begin{figure}[H]
 
 {\centering \includegraphics[width=0.5\linewidth]{images/hist_densidade-1} 
@@ -361,6 +386,9 @@ parâmetros \(\mu = \bar{ln(valor)}\)
 \item
   Cumulativa
 \end{enumerate}
+
+A figura \ref{fig:cdf} ilustra o gráfico da função cumulativa de
+probabilidade (FCP) para a variável \texttt{valor}.
 
 \begin{figure}[H]
 
@@ -379,7 +407,10 @@ parâmetros \(\mu = \bar{ln(valor)}\)
   Distribuição da variável \(ln(valor)\)
 \end{enumerate}
 
-A figura \ref{fig:hist_densidade2}
+A figura \ref{fig:hist_densidade2} mostra a distribuição da variável
+\(\ln(valor)\). Pode-se notar que, conforme esperado, já que a
+distribuição da variável \texttt{valor} é aproximadamente lognormal, seu
+logaritmo tem distribuição aproximadamente normal.
 
 \begin{figure}[H]
 
@@ -395,12 +426,26 @@ A figura \ref{fig:hist_densidade2}
 Detectando-se a presença de variável resposta com distribuição
 lognormal, pode-se proceder da seguinte maneira:
 
+\begin{itemize}
+\tightlist
+\item
+  Proceder com a transformação da variável resposta pela função
+  logarítmica;
+\item
+  Proceder com a variável na escala original, corrigindo posteriormente
+  a heteroscedasticidade com o método de Eickert-White;
+\item
+  Proceder com o Método dos Mínimos Quadrados Ponderados.
+\end{itemize}
+
 \subsubsection{Modelo linear com a variável resposta
 transformada}\label{modelo-linear-com-a-variavel-resposta-transformada}
 
 É fácil mostrar que o modelo linear com a variável resposta
 logaritmizada, ou seja, com distribuição normal, é melhor ajustado que o
-modelo linear de uma variável resposta lognormal. Além disso, o modelo
+modelo linear de uma variável resposta lognormal. Na tabela
+\ref{tab:tabela}, no entanto, mostra-se que, para o presente caso, esta
+melhora de ajuste é modesta, próxima a 4,5\%. Além disso, o modelo
 linear, sem transformação, é heteroscedástico.
 
 \begin{verbatim}
@@ -552,6 +597,18 @@ variável pela função logaritmo natural, como pode ser visto em DUAN
 (\protect\hyperlink{ref-meulenberg1965}{1965}) e SHEN; ZHU
 (\protect\hyperlink{ref-shen}{2008}).
 
+De acordo com Shen e Zhu (\protect\hyperlink{ref-shen}{2008}), com a
+simples aplicação da transformação inversa (exponencial) à aplicada na
+variável dependente (logarítimica), chegamos ao \emph{Back-Transform}
+(BT) \emph{Estimator}, que tem performance ``muito pior do que os outros
+estimadores'' (\protect\hyperlink{ref-shen}{2008}, p. 554). De fato, o
+estimador BT seria mais apropriado para estimar a mediana (SHEN; ZHU,
+\protect\hyperlink{ref-shen}{2008}, p. 554), no entanto a equação de
+regressão linear é uma equação para a média da variável dependente.
+Métodos de regressão à mediana (KOENKER; HALLOCK,
+\protect\hyperlink{ref-koenker}{2001}), então, seriam mais apropriados
+para este fim.
+
 Entendemos que, na precisão necessária para a área de avaliação de
 imóveis, é suficiente a adoção do estimador teórico, apesar do
 funcionamento dos estimadores não-paramétricos ter sido demonstrado mais
@@ -583,56 +640,56 @@ heteroscedasticidade}\label{modelo-linear-com-posterior-correcao-da-heteroscedas
  & default & robust \\ 
 \\[-1.8ex] & (1) & (2)\\ 
 \hline \\[-1.8ex] 
- area\_total & 2,893.178 & 2,893.178 \\ 
-  & (2,065.405, 3,720.951) & (1,712.055, 4,074.302) \\ 
-  & t = 6.850 & t = 4.801 \\ 
-  & p = 0.00000$^{***}$ & p = 0.00001$^{***}$ \\ 
+ area\_total & 2.893,178 & 2.893,178 \\ 
+  & (2.065,405, 3.720,951) & (1.712,055, 4.074,302) \\ 
+  & t = 6,850 & t = 4,801 \\ 
+  & p = 0,00000$^{***}$ & p = 0,00001$^{***}$ \\ 
   & & \\ 
- quartos & 73,524.375 & 73,524.375 \\ 
-  & ($-$34,814.143, 181,862.894) & ($-$31,897.755, 178,946.506) \\ 
-  & t = 1.330 & t = 1.367 \\ 
-  & p = 0.191 & p = 0.172 \\ 
+ quartos & 73.524,375 & 73.524,375 \\ 
+  & ($-$34.814,143, 181.862,894) & ($-$31.897,755, 178.946,506) \\ 
+  & t = 1,330 & t = 1,367 \\ 
+  & p = 0,191 & p = 0,172 \\ 
   & & \\ 
- suites & 111,000.591 & 111,000.591 \\ 
-  & (8,045.131, 213,956.052) & (18,671.249, 203,329.934) \\ 
-  & t = 2.113 & t = 2.356 \\ 
-  & p = 0.041$^{**}$ & p = 0.019$^{**}$ \\ 
+ suites & 111.000,591 & 111.000,591 \\ 
+  & (8.045,131, 213.956,052) & (18.671,249, 203.329,934) \\ 
+  & t = 2,113 & t = 2,356 \\ 
+  & p = 0,041$^{**}$ & p = 0,019$^{**}$ \\ 
   & & \\ 
- garagens & 148,427.448 & 148,427.448 \\ 
-  & (49,657.102, 247,197.795) & (73,906.905, 222,947.992) \\ 
-  & t = 2.945 & t = 3.904 \\ 
-  & p = 0.006$^{***}$ & p = 0.0001$^{***}$ \\ 
+ garagens & 148.427,448 & 148.427,448 \\ 
+  & (49.657,102, 247.197,795) & (73.906,905, 222.947,992) \\ 
+  & t = 2,945 & t = 3,904 \\ 
+  & p = 0,006$^{***}$ & p = 0,0001$^{***}$ \\ 
   & & \\ 
- dist\_b\_mar & $-$223.217 & $-$223.217 \\ 
-  & ($-$434.862, $-$11.571) & ($-$406.588, $-$39.845) \\ 
-  & t = $-$2.067 & t = $-$2.386 \\ 
-  & p = 0.045$^{**}$ & p = 0.018$^{**}$ \\ 
+ dist\_b\_mar & $-$223,217 & $-$223,217 \\ 
+  & ($-$434,862, $-$11,571) & ($-$406,588, $-$39,845) \\ 
+  & t = $-$2,067 & t = $-$2,386 \\ 
+  & p = 0,045$^{**}$ & p = 0,018$^{**}$ \\ 
   & & \\ 
- padraomedio & $-$146,549.393 & $-$146,549.393 \\ 
-  & ($-$354,850.457, 61,751.672) & ($-$322,293.226, 29,194.441) \\ 
-  & t = $-$1.379 & t = $-$1.634 \\ 
-  & p = 0.176 & p = 0.103 \\ 
+ padraomedio & $-$146.549,393 & $-$146.549,393 \\ 
+  & ($-$354.850,457, 61.751,672) & ($-$322.293,226, 29.194,441) \\ 
+  & t = $-$1,379 & t = $-$1,634 \\ 
+  & p = 0,176 & p = 0,103 \\ 
   & & \\ 
- padraoalto & $-$56,064.550 & $-$56,064.550 \\ 
-  & ($-$264,003.525, 151,874.426) & ($-$197,646.893, 85,517.794) \\ 
-  & t = $-$0.528 & t = $-$0.776 \\ 
-  & p = 0.600 & p = 0.438 \\ 
+ padraoalto & $-$56.064,550 & $-$56.064,550 \\ 
+  & ($-$264.003,525, 151.874,426) & ($-$197.646,893, 85.517,794) \\ 
+  & t = $-$0,528 & t = $-$0,776 \\ 
+  & p = 0,600 & p = 0,438 \\ 
   & & \\ 
- Constant & 33,953.788 & 33,953.788 \\ 
-  & ($-$267,469.800, 335,377.375) & ($-$191,823.586, 259,731.161) \\ 
-  & t = 0.221 & t = 0.295 \\ 
-  & p = 0.827 & p = 0.769 \\ 
+ Constant & 33.953,788 & 33.953,788 \\ 
+  & ($-$267.469,800, 335.377,375) & ($-$191.823,586, 259.731,161) \\ 
+  & t = 0,221 & t = 0,295 \\ 
+  & p = 0,827 & p = 0,769 \\ 
   & & \\ 
 \hline \\[-1.8ex] 
 Observations & 50 & 50 \\ 
-R$^{2}$ & 0.906 & 0.906 \\ 
-Adjusted R$^{2}$ & 0.890 & 0.890 \\ 
-Akaike Inf. Crit. & 1,375.659 & 1,375.659 \\ 
-Residual Std. Error (df = 42) & 207,903.003 & 207,903.003 \\ 
-F Statistic (df = 7; 42) & 57.731$^{***}$ & 57.731$^{***}$ \\ 
+R$^{2}$ & 0,906 & 0,906 \\ 
+Adjusted R$^{2}$ & 0,890 & 0,890 \\ 
+Akaike Inf. Crit. & 1.375,659 & 1.375,659 \\ 
+Residual Std. Error (df = 42) & 207.903,003 & 207.903,003 \\ 
+F Statistic (df = 7; 42) & 57,731$^{***}$ & 57,731$^{***}$ \\ 
 \hline 
 \hline \\[-1.8ex] 
-\textit{Note:}  & \multicolumn{2}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+\textit{Note:}  & \multicolumn{2}{r}{$^{*}$p$<$0,1; $^{**}$p$<$0,05; $^{***}$p$<$0,01} \\ 
 \end{tabular} 
 \end{table}
 
@@ -660,6 +717,26 @@ erros robustos:
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 \end{verbatim}
+
+\subsubsection{Mínimos quadrados
+ponderados}\label{minimos-quadrados-ponderados}
+
+De acordo com Matloff (\protect\hyperlink{ref-matloff2017}{2017}, p.
+139), em princípio, o Método dos Mínimos Quadrados ponderados (MQP)
+fornece melhores estimativas para os coeficientes e inferência
+estatística correta mesmo na presença de heteroscedasticidade. Tal
+método consiste, analogamente ao Método dos Mínimos Quadrados Ordinários
+(MQO), em uma minimização. No caso dos MQO, minimiza-se a quantidade
+abaixo (MATLOFF, \protect\hyperlink{ref-matloff2017}{2017}, p. 69):
+
+\[\frac{1}{n} \sum_{i=1}^{n} (Y_i - \tilde{X}_i'b)^2\]
+
+Enquanto o MQP minimiza (MATLOFF,
+\protect\hyperlink{ref-matloff2017}{2017}, p. 133):
+
+\[\frac{1}{n} \sum_{i=1}^{n} \frac{1}{w_i} (Y_i - \tilde{X}_i'b)^2\]
+
+Onde \(w_i = \sigma^2(X_i)\).
 
 \subsubsection{Comparação das previsões para os dois
 modelos}\label{comparacao-das-previsoes-para-os-dois-modelos}
@@ -803,15 +880,18 @@ predicted.value & se & ci.lower & ci.upper & amplitude\\
 \section{CONCLUSÃO}\label{conclusao}
 
 Foi possível demonstrar de maneira gráfica que os dados da variável
-\texttt{valor} apresentados se ajustam bem a uma distribuição lognormal
+valor apresentados se ajustam bem a uma distribuição lognormal
 equivalente. Por definição, então, o logaritmo da variável possui
 distribuição normal.
 
-0 valor mais provável para a variável resposta, então, é Valor Esperado
-da variável. Logo, a retransformação da variável deve ser feita para a
-média da variável log-normal.
+Consideramos que o valor mais provável para a variável resposta é o seu
+Valor Esperado. Logo, a retransformação da variável deve ser feita para
+a média da variável log-normal.
 
-\newpage
+Uma alternativa seria a aplicação da regressão linear ponderada (ou
+mínimos quadrados ponderados). No entanto, o método de Eickert-White
+parece ser adequado e sua aplicação menos complexa do que o método de
+regressão ponderada. \newpage
 
 \hypertarget{anexo-i}{\section*{ANEXO I}\label{anexo-i}}
 \addcontentsline{toc}{section}{ANEXO I}
@@ -921,6 +1001,10 @@ Florianópolis: IBAPE - SC, 2015.
 \hypertarget{ref-keene}{}
 KEENE, O. N. The log transformation is special. \textbf{Statistics in
 Medicine}, v. 14, p. 811--819, 1985.
+
+\hypertarget{ref-koenker}{}
+KOENKER, R.; HALLOCK, K. F. Quantile regression. \textbf{Journal of
+Economic Perspectives}, v. 15, n. 4, p. 143--156, 2001.
 
 \hypertarget{ref-matloff2017}{}
 MATLOFF, N. \textbf{Statistical regression and classification: From

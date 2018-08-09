@@ -13,5 +13,7 @@ Aprenda como plotar a distribuição lognormal de diversas formas, como esta:
 
 
 
-<img src="images/lognormal-1.png" style="display: block; margin: auto;" />
+<video controls loop><source src="images/lognormal.webm" /></video>
+
+
 
