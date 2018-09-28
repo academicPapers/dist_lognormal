@@ -55,8 +55,8 @@ Luiz F. P. Droubi\inst{1}, Willian Zonato\inst{1}, Norberto Hochheim\inst{2}
 \section{Introdução}
 
 Certas amostras de dados apresentam distribuição consideravelmente diferente da
-distribuição normal. Um dos pressupostos da inferência estatística clássica é o da
-normalidade dos resíduos. Outro é a homoscedasticidade dos mesmos. Estas
+distribuição normal. Um dos pressupostos da inferência estatística clássica é o 
+da normalidade dos resíduos. Outro é a homoscedasticidade dos mesmos. Estas
 duas hipóteses dificilmente são atingidos se a distribuição da variável
 dependente não for próxima da distribuição normal.
 
@@ -67,8 +67,8 @@ Para contornar este problema, podemos:
 se aproximadamente normal
   \item Utilizar o método dos mínimos quadrados ponderados, de forma a remover a
 heteroscedasticidade do modelo
-  \item Calcular erros heteroscedásticos consistentes, com o método de Eicker-White,
-por exemplo.
+  \item Calcular erros heteroscedásticos consistentes, com o método de 
+  Eicker-White, por exemplo.
 \end{enumerate}
 
 Neste trabalho, focamos na primeira abordagem, qual seja, a da transformação da
@@ -80,7 +80,8 @@ variável resposta.
 \begin{figure}
   \centering
   \includegraphics[width=0.9\columnwidth]{imagens/Normal.png}
-  \caption{Modelo físico demonstrando a gênese da distribuição normal. FONTE: \cite{1}}
+  \caption{Modelo físico demonstrando a gênese da distribuição normal. 
+  FONTE: \cite{1}}
   \label{fig:normal}
 \end{figure}
 \vskip1ex
@@ -89,7 +90,8 @@ variável resposta.
 \begin{figure}
   \centering
   \includegraphics[width=0.9\columnwidth]{imagens/Lognormal.png}
-  \caption{Modelo físico demonstrando a gênese da distribuição lognormal. FONTE: \cite{1}}
+  \caption{Modelo físico demonstrando a gênese da distribuição lognormal. 
+  FONTE: \cite{1}}
   \label{fig:lognormal}
 \end{figure}
 
@@ -100,14 +102,15 @@ variável resposta.
 
 \subsection{Medidas de tendência central}
 
-Na distribuição lognormal, diferentemente do que ocorre nas distribuições simétricas,
-como a distribuição normal, moda, média e mediana tem valores distintos,
-o que pode ser observado na figura \ref{fig:normal_lognormal}.
+Na distribuição lognormal, diferentemente do que ocorre nas distribuições 
+simétricas, como a distribuição normal, moda, média e mediana tem valores 
+distintos, o que pode ser observado na figura \ref{fig:normal_lognormal}.
 
 \vskip1ex
 \begin{figure}
   \centering
-  \includegraphics[width=0.99\columnwidth]{E:/Documents/Artigos/Dist_lognormal/images/normal_lognormal-1.png}
+  \includegraphics[width=0.99\columnwidth]
+  {E:/Documents/Artigos/Dist_lognormal/images/normal_lognormal-1.png}
   \caption{Comparação entre distribuição normal e lognormal. FONTE: Autor}
   \label{fig:normal_lognormal}
 \end{figure}
@@ -163,32 +166,36 @@ h. Intervalos de Confiança
 
 \subsection{Estimação dos parâmetros}
 
-A melhor maneira de estimar os parâmetros de dados lognormais é através do cálculo
-dos parâmetros na escala logarítmica.
+A melhor maneira de estimar os parâmetros de dados lognormais é através do 
+cálculo dos parâmetros na escala logarítmica.
 
 Por exemplo, seja $X$ uma variável aleatória com distribuição aproximadamente 
 lognormal.Para estimar o parâmetro $\mu(X)$, primeiro estima-se o valor da média 
-da variável $\ln(X)$, $\bar{x}$, e depois retorna-se para a estimava do parâmetro $\mu$ 
-na escala original através da transformação inversa ($\mu = \exp(\bar{x})$).
+da variável $\ln(X)$, $\bar{x}$, e depois retorna-se para a estimava do 
+parâmetro $\mu$ na escala original através da transformação inversa 
+($\mu = \exp(\bar{x})$).
 
 \section{Resultados}
 
-No que tange à Engenharia de Avaliações, um dos aspectos mais importantes é o de qual
-seria a melhor medida de tendência central a se adotar para estimar o valor do bem.
+No que tange à Engenharia de Avaliações, um dos aspectos mais importantes é o de 
+qual seria a melhor medida de tendência central a se adotar para estimar o valor 
+do bem.
 
-Na tabela 1 mostramos que a adoção da média, moda ou mediana é praticamente irrelevante
-quando o erro-padrão $\sigma$ da regressão é pequeno. Porém, para altos valores de $\sigma$,
-percebe-se uma discrepância muito grande entre os valores obtidos com a média, moda ou mediana.
+Na tabela 1 mostramos que a adoção da média, moda ou mediana é praticamente 
+irrelevante quando o erro-padrão $\sigma$ da regressão é pequeno. Porém, para 
+altos valores de $\sigma$, percebe-se uma discrepância muito grande entre os 
+valores obtidos com a média, moda ou mediana.
 
-Para efeito de comparação, a tabela 1 mostra os valores da moda e da média em função
-do desvio-padrão $\sigma$, quando a mediana da distribuição tem valor fixado em
-$\mu^* = 1.000.000$.
+Para efeito de comparação, a tabela 1 mostra os valores da moda e da média em 
+função do desvio-padrão $\sigma$, quando a mediana da distribuição tem valor 
+fixado em $\mu^* = 1.000.000$.
 
 \vskip1ex
 \begin{table}
   \rowcolors{2}{gray!25}{white}
   \centering
-  \caption{Moda e Média em função do desvio-padrão, quando $\mu$ = 1.000.000. FONTE: Autor.}
+  \caption{Moda e Média em função do desvio-padrão, quando $\mu$ = 1.000.000. 
+  FONTE: Autor.}
   \begin{tabular}{ccccc}
     \rowcolor{gray!50}
     \hline\hline

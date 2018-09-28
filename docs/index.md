@@ -20,7 +20,7 @@ title: "Distribuição LogNormal"
 
 Para ler o artigo em **HTML** [clique aqui.](https://github.com/lfpdroubi/dist_lognormal/blob/master/Artigo.md)
 
-Para ler o artigo em **PDF** [clique aqui.](https://github.com/lfpdroubi/dist_lognormal/blob/master/Artigo.pdf)
+Para ler o artigo em **PDF** [clique aqui.](https://github.com/lfpdroubi/dist_lognormal/blob/master/537-1792-1-SP.pdf)
 
 Para ver a apresentação [clique aqui.](./Apresentacao.html)
 
