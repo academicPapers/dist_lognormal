@@ -192,6 +192,11 @@ Ou seja, a distribuição de uma variável $Y = e^X$, em que $X \sim N(0,1)$ é 
 A figura \ref{fig:normal_lognormal} ilustra este fato.
 
 ```{r normal_lognormal, out.width="100%", fig.cap = "Comparação entre distribuições normal e lognormal padronizadas."}
+# Medidas de Tendência Central da amostra
+mediana <- 1
+desvio <- exp(1)
+media <- mediana*exp(log(desvio)^2/2)
+moda <- mediana/exp(log(desvio)^2)
 # Gráfico Normal
 xvalues <- -4:4
 x <- data.frame(x = xvalues)
