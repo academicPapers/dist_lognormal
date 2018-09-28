@@ -29,6 +29,6 @@ Para ver a apresentação [clique aqui.](./Apresentacao.html)
 - [x] Para revisão
 - [x] Submetido
 - [x] Aprovado
-- [x] Selecionado para apresentação em formato [poster](../poster/poster.pdf)
+- [x] Selecionado para apresentação em formato [poster](./poster/poster.pdf)
 
 Florianópolis, 23 de abril de 2018.
